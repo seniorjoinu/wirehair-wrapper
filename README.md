@@ -1,6 +1,6 @@
 ## Wirehair Kotlin Wrapper
 
-Kotlin wrapper for amazing `https://github.com/catid/wirehair`
+Kotlin wrapper for amazing [catid/wirehair](https://github.com/catid/wirehair)
 
 ### Example
 ```kotlin
@@ -42,6 +42,9 @@ Wirehair.Encoder(message, kMessageBytes, kPacketSize).use { encoder ->
     }
 }
 ```
+
+### Details
+Binaries should lie under `resources/[ABI]`. Use static one.
 
 ### Install
 Use [Jitpack](https://jitpack.io/)
