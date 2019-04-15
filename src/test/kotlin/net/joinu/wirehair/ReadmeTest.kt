@@ -8,7 +8,7 @@ import org.spekframework.spek2.style.gherkin.Feature
 object ReadmeTest: Spek({
     Feature("Wrapper works fine") {
         Scenario("Repeating the example test from wirehair repo") {
-            val initResult = Wirehair.WRAPPER.wirehair_init()
+            val initResult = Wirehair.WRAPPER.wirehair_init_()
 
             assert(initResult == Wirehair.WirehairResult.Success)
 

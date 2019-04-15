@@ -18,7 +18,7 @@ interface Wirehair : Library {
         }
     }
 
-    fun wirehair_init(): Int
+    fun wirehair_init_(): Int
     fun wirehair_encoder_create(reuseOpt: WirehairCodec?, message: ByteArray, messageBytes: Int, blockBytes: Int): WirehairCodec?
     fun wirehair_encode(codec: WirehairCodec, blockId: Int, blockDataOut: ByteArray, outBytes: Int, dataBytesOut: IntByReference): Int
     fun wirehair_decoder_create(reuseOpt: WirehairCodec?, messageBytes: Int, blockBytes: Int): WirehairCodec?
