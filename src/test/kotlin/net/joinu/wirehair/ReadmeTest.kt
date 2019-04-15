@@ -38,19 +38,19 @@ object ReadmeTest: Spek({
                 ++needed
 
                 val block = ByteArray(kPacketSize)
-                val writeLen = 0
+                val writeLen = IntByReference(0)
 
                 val encodeResult = Wirehair.WRAPPER.wirehair_encode(
                     encoder,
                     blockId,
                     block,
                     kPacketSize,
-                    IntByReference(writeLen)
+                    writeLen
                 )
 
                 assert(encodeResult == Wirehair.WirehairResult.Success) { "Encode failed" }
 
-                val decodeResult = Wirehair.WRAPPER.wirehair_decode(decoder, blockId, block, writeLen)
+                val decodeResult = Wirehair.WRAPPER.wirehair_decode(decoder, blockId, block, writeLen.value)
 
                 if (decodeResult == Wirehair.WirehairResult.Success)
                     break

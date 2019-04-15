@@ -2,9 +2,10 @@ package net.joinu.wirehair
 
 import com.sun.jna.Library
 import com.sun.jna.Native
-import com.sun.jna.Structure
+import com.sun.jna.Pointer
 import com.sun.jna.ptr.IntByReference
 
+typealias WirehairCodec = Pointer
 
 interface Wirehair : Library {
     companion object {
@@ -18,7 +19,7 @@ interface Wirehair : Library {
         }
     }
 
-    fun wirehair_init_(): Int
+    fun wirehair_init_(expected_version: Int = 2): Int
     fun wirehair_encoder_create(reuseOpt: WirehairCodec?, message: ByteArray, messageBytes: Int, blockBytes: Int): WirehairCodec?
     fun wirehair_encode(codec: WirehairCodec, blockId: Int, blockDataOut: ByteArray, outBytes: Int, dataBytesOut: IntByReference): Int
     fun wirehair_decoder_create(reuseOpt: WirehairCodec?, messageBytes: Int, blockBytes: Int): WirehairCodec?
@@ -28,7 +29,6 @@ interface Wirehair : Library {
     fun wirehair_decoder_becomes_encoder(codec: WirehairCodec): Int
     fun wirehair_free(codec: WirehairCodec)
 
-    class WirehairCodec : Structure()
     object WirehairResult {
         const val Success = 0
         const val NeedMore = 1
