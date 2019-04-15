@@ -28,12 +28,9 @@ object ReadmeTest: Spek({
             }
 
             var blockId = 0
-            var needed = 0
 
             while (true) {
                 blockId++
-
-                ++needed
 
                 val block = ByteArray(kPacketSize)
                 val writeLen = IntByReference(0)
