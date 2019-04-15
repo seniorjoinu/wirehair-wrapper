@@ -8,22 +8,22 @@ import org.spekframework.spek2.style.gherkin.Feature
 object ReadmeTest: Spek({
     Feature("Wrapper works fine") {
         Scenario("Repeating the example test from wirehair repo") {
-            val initResult = Wirehair.WRAPPER.wirehair_init_()
+            val initResult = WirehairLib.INSTANCE.wirehair_init_(2)
 
-            assert(initResult == Wirehair.WirehairResult.Success)
+            assert(initResult == 0)
 
             val kPacketSize = 1400
             val kMessageBytes = 1000 * 1000 + 333
 
             val message = ByteArray(kMessageBytes)
 
-            val encoder = Wirehair.WRAPPER.wirehair_encoder_create(null, message, kMessageBytes, kPacketSize)
+            val encoder = WirehairLib.INSTANCE.wirehair_encoder_create(null, message, kMessageBytes, kPacketSize)
                 ?: error("Encoder is not created")
 
-            val decoder = Wirehair.WRAPPER.wirehair_decoder_create(null, kMessageBytes, kPacketSize)
+            val decoder = WirehairLib.INSTANCE.wirehair_decoder_create(null, kMessageBytes, kPacketSize)
 
             if (decoder == null) {
-                Wirehair.WRAPPER.wirehair_free(encoder)
+                WirehairLib.INSTANCE.wirehair_free(encoder)
                 error("Decoder is not created")
             }
 
@@ -33,14 +33,12 @@ object ReadmeTest: Spek({
             while (true) {
                 blockId++
 
-                if (blockId % 10 == 0) continue
-
                 ++needed
 
                 val block = ByteArray(kPacketSize)
                 val writeLen = IntByReference(0)
 
-                val encodeResult = Wirehair.WRAPPER.wirehair_encode(
+                val encodeResult = WirehairLib.INSTANCE.wirehair_encode(
                     encoder,
                     blockId,
                     block,
@@ -48,23 +46,25 @@ object ReadmeTest: Spek({
                     writeLen
                 )
 
-                assert(encodeResult == Wirehair.WirehairResult.Success) { "Encode failed" }
+                if (blockId % 10 == 0) continue
 
-                val decodeResult = Wirehair.WRAPPER.wirehair_decode(decoder, blockId, block, writeLen.value)
+                assert(encodeResult == 0) { "Encode failed" }
 
-                if (decodeResult == Wirehair.WirehairResult.Success)
+                val decodeResult = WirehairLib.INSTANCE.wirehair_decode(decoder, blockId, block, writeLen.value)
+
+                if (decodeResult == 0)
                     break
 
-                assert(decodeResult == Wirehair.WirehairResult.NeedMore) { "Decode failed" }
+                assert(decodeResult == 1) { "Decode failed" }
             }
 
             val decoded = ByteArray(kMessageBytes)
-            val recoverResult = Wirehair.WRAPPER.wirehair_recover(decoder, decoded, kMessageBytes)
+            val recoverResult = WirehairLib.INSTANCE.wirehair_recover(decoder, decoded, kMessageBytes)
 
-            assert(recoverResult == Wirehair.WirehairResult.Success) { "Recover failed" }
+            assert(recoverResult == 0) { "Recover failed" }
 
-            Wirehair.WRAPPER.wirehair_free(encoder)
-            Wirehair.WRAPPER.wirehair_free(decoder)
+            WirehairLib.INSTANCE.wirehair_free(encoder)
+            WirehairLib.INSTANCE.wirehair_free(decoder)
         }
     }
 })
