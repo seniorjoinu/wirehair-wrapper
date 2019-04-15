@@ -43,6 +43,9 @@ Wirehair.Encoder(message, kMessageBytes, kPacketSize).use { encoder ->
 }
 ```
 
+### Details
+Binaries should lie under `resources/[ABI]`. Use static one.
+
 ### Install
 Use [Jitpack](https://jitpack.io/)
 
