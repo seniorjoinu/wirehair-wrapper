@@ -12,7 +12,7 @@ val kPacketSize = 1400
 val kMessageBytes = 1000 * 1000 + 333
 
 // creating the message
-val message = ByteArray(kMessageBytes)
+val message = ByteBuffer.allocateDirect(kMessageBytes) as DirectBuffer
 
 // creating encoder and decoder and releasing them after all stuff is done
 Wirehair.Encoder(message, kMessageBytes, kPacketSize).use { encoder ->
