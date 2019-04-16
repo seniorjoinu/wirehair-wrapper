@@ -2,6 +2,7 @@ package net.joinu.wirehair
 
 import com.sun.jna.Pointer
 import com.sun.jna.ptr.IntByReference
+import sun.nio.ch.DirectBuffer
 import java.io.Closeable
 
 
@@ -31,7 +32,7 @@ object Wirehair {
      *
      * @throws [IllegalStateException]
      */
-    class Encoder(message: ByteArray, messageBytes: Int, blockBytes: Int, reuseOpt: Encoder? = null) : Closeable {
+    class Encoder(message: DirectBuffer, messageBytes: Int, blockBytes: Int, reuseOpt: Encoder? = null) : Closeable {
         val pointer: Pointer
 
         init {

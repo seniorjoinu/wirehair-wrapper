@@ -1,10 +1,12 @@
 package net.joinu.wirehair
 
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.RepeatedTest
+import sun.nio.ch.DirectBuffer
+import java.nio.ByteBuffer
 
 
 object HighLevelTest {
-    @Test
+    @RepeatedTest(100)
     fun `the high-level wrapper works fine`() {
         // initializing wirehair
         Wirehair.init()
@@ -14,7 +16,7 @@ object HighLevelTest {
         val kMessageBytes = 1000 * 1000 + 333
 
         // creating the message
-        val message = ByteArray(kMessageBytes)
+        val message = ByteBuffer.allocateDirect(kMessageBytes) as DirectBuffer
 
         // creating encoder and decoder and releasing them after all stuff is done
         Wirehair.Encoder(message, kMessageBytes, kPacketSize).use { encoder ->

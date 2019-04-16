@@ -1,11 +1,13 @@
 package net.joinu.wirehair
 
 import com.sun.jna.ptr.IntByReference
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.RepeatedTest
+import sun.nio.ch.DirectBuffer
+import java.nio.ByteBuffer
 
 
 object ReadmeTest {
-    @Test
+    @RepeatedTest(100)
     fun `the low-level wrapper works fine`() {
         val initResult = WirehairLib.INSTANCE.wirehair_init_(2)
 
@@ -14,7 +16,7 @@ object ReadmeTest {
         val kPacketSize = 1400
         val kMessageBytes = 1000 * 1000 + 333
 
-        val message = ByteArray(kMessageBytes)
+        val message = ByteBuffer.allocateDirect(kMessageBytes) as DirectBuffer
 
         val encoder = WirehairLib.INSTANCE.wirehair_encoder_create(null, message, kMessageBytes, kPacketSize)
             ?: error("Encoder is not created")
