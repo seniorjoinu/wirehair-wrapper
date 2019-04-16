@@ -4,6 +4,7 @@ import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.ptr.IntByReference
+import sun.nio.ch.DirectBuffer
 
 
 interface WirehairLib : Library {
@@ -18,7 +19,7 @@ interface WirehairLib : Library {
     }
 
     fun wirehair_init_(expected_version: Int): Int
-    fun wirehair_encoder_create(reuseOpt: Pointer?, message: ByteArray, messageBytes: Int, blockBytes: Int): Pointer?
+    fun wirehair_encoder_create(reuseOpt: Pointer?, message: DirectBuffer, messageBytes: Int, blockBytes: Int): Pointer?
     fun wirehair_encode(
         codec: Pointer,
         blockId: Int,
