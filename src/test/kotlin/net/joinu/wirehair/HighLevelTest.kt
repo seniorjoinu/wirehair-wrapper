@@ -4,6 +4,7 @@ import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import sun.nio.ch.DirectBuffer
 import java.nio.ByteBuffer
+import java.util.*
 
 
 object HighLevelTest {
@@ -17,10 +18,17 @@ object HighLevelTest {
         val kMessageBytes = 1000 * 1000 + 333
 
         // creating the message
-        val message = ByteBuffer.allocateDirect(kMessageBytes) as DirectBuffer
+        val message = ByteBuffer.allocateDirect(kMessageBytes)
+        val messageBytes = ByteArray(kMessageBytes)
+        Random().nextBytes(messageBytes)
+
+        message.put(messageBytes)
+        message.rewind()
+
+        val decodedMessage = ByteBuffer.allocateDirect(kMessageBytes)
 
         // creating encoder and decoder and releasing them after all stuff is done
-        Wirehair.Encoder(message, kMessageBytes, kPacketSize).use { encoder ->
+        Wirehair.Encoder(message as DirectBuffer, kMessageBytes, kPacketSize).use { encoder ->
             Wirehair.Decoder(kMessageBytes, kPacketSize).use { decoder ->
                 var blockId = 0
 
@@ -29,8 +37,8 @@ object HighLevelTest {
                     blockId++
 
                     // generating repair block
-                    val block = ByteArray(kPacketSize)
-                    val writeLen = encoder.encode(blockId, block, kPacketSize)
+                    val block = ByteBuffer.allocateDirect(kPacketSize)
+                    val writeLen = encoder.encode(blockId, block as DirectBuffer, kPacketSize)
 
                     // imitating 10 percent packet drop
                     if (blockId % 10 == 0) continue
@@ -42,10 +50,17 @@ object HighLevelTest {
                 }
 
                 // decoding message from accumulated repair blocks
-                val decoded = ByteArray(kMessageBytes)
-                decoder.recover(decoded, kMessageBytes)
+                decoder.recover(decodedMessage as DirectBuffer, kMessageBytes)
             }
         }
+
+        val messageArray = ByteArray(kMessageBytes)
+        message.get(messageArray)
+
+        val decodedMessageArray = ByteArray(kMessageBytes)
+        decodedMessage.get(decodedMessageArray)
+
+        assert(messageArray.contentEquals(decodedMessageArray))
     }
 
     @Test
@@ -60,13 +75,15 @@ object HighLevelTest {
         val encoder = Wirehair.Encoder(message, kMessageBytes, kPacketSize)
         val decoder = Wirehair.Decoder(kMessageBytes, kPacketSize)
 
+        val blockDataOut = ByteBuffer.allocateDirect(kPacketSize)
+
         encoder.close()
-        assertThrows { encoder.encode(1, ByteArray(kPacketSize), kPacketSize) }
+        assertThrows { encoder.encode(1, blockDataOut as DirectBuffer, kPacketSize) }
         assertThrows { encoder.close() }
 
         decoder.close()
         assertThrows {
-            decoder.decode(1, ByteArray(1400), kPacketSize)
+            decoder.decode(1, blockDataOut as DirectBuffer, kPacketSize)
             assertThrows { decoder.close() }
         }
     }

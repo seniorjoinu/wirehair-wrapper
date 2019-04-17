@@ -23,14 +23,14 @@ interface WirehairLib : Library {
     fun wirehair_encode(
         codec: Pointer,
         blockId: Int,
-        blockDataOut: ByteArray,
+        blockDataOut: DirectBuffer,
         outBytes: Int,
         dataBytesOut: IntByReference
     ): Int
 
     fun wirehair_decoder_create(reuseOpt: Pointer?, messageBytes: Int, blockBytes: Int): Pointer?
-    fun wirehair_decode(codec: Pointer, blockId: Int, blockData: ByteArray, dataBytes: Int): Int
-    fun wirehair_recover(codec: Pointer, messageOut: ByteArray, messageBytes: Int): Int
+    fun wirehair_decode(codec: Pointer, blockId: Int, blockData: DirectBuffer, dataBytes: Int): Int
+    fun wirehair_recover(codec: Pointer, messageOut: DirectBuffer, messageBytes: Int): Int
     fun wirehair_recover_block(codec: Pointer, blockId: Int, blockData: ByteArray, bytesOut: IntByReference): Int
     fun wirehair_decoder_becomes_encoder(codec: Pointer): Int
     fun wirehair_free(codec: Pointer)

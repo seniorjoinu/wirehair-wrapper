@@ -62,7 +62,7 @@ object Wirehair {
          * Use it to generate infinite number of repair blocks
          *
          * @param blockId [Int] - identifier of repair block to generate
-         * @param blockDataOut [ByteArray] - output repair block
+         * @param blockDataOut [DirectBuffer] - output repair block
          * @param outBytes [Int] - bytes in the output repair block
          *
          * @return [Int] - number of bytes written <= blockBytes
@@ -70,7 +70,7 @@ object Wirehair {
          * @throws [WirehairException]
          * @throws [IllegalStateException]
          */
-        fun encode(blockId: Int, blockDataOut: ByteArray, outBytes: Int): Int {
+        fun encode(blockId: Int, blockDataOut: DirectBuffer, outBytes: Int): Int {
             throwIfClosed()
 
             val dataBytesOut = IntByReference(0)
@@ -118,14 +118,14 @@ object Wirehair {
          * Use it to accumulate as much repair blocks as needed
          *
          * @param blockId [Int] - identifier of repair block to accumulate
-         * @param blockData [ByteArray] - repair block data
+         * @param blockData [DirectBuffer] - repair block data
          * @param dataBytes [Int] - bytes in the repair block data
          *
          * @return [Boolean] - you need more repair blocks for message recovery if this returns false, otherwise you did great!
          *
          * @throws [WirehairException]
          */
-        fun decode(blockId: Int, blockData: ByteArray, dataBytes: Int): Boolean {
+        fun decode(blockId: Int, blockData: DirectBuffer, dataBytes: Int): Boolean {
             throwIfClosed()
 
             val result = WirehairLib.INSTANCE.wirehair_decode(pointer, blockId, blockData, dataBytes)
@@ -136,13 +136,13 @@ object Wirehair {
         /**
          * Recovers message from accumulated repair blocks
          *
-         * @param messageOut [ByteArray] - reconstructed from repair blocks message
+         * @param messageOut [DirectBuffer] - reconstructed from repair blocks message
          * @param messageBytes [Int] - bytes in reconstructed message
          *
          * @throws [WirehairException]
          * @throws [IllegalStateException]
          */
-        fun recover(messageOut: ByteArray, messageBytes: Int) {
+        fun recover(messageOut: DirectBuffer, messageBytes: Int) {
             throwIfClosed()
 
             val result = WirehairLib.INSTANCE.wirehair_recover(pointer, messageOut, messageBytes)
