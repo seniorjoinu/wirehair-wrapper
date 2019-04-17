@@ -8,6 +8,11 @@ import java.util.*
 
 
 object HighLevelTest {
+    init {
+        System.setProperty("jna.debug_load", "true")
+        System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "TRACE")
+    }
+
     @RepeatedTest(100)
     fun `the high-level wrapper works fine`() {
         // initializing wirehair

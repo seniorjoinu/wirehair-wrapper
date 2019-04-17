@@ -7,6 +7,11 @@ import java.nio.ByteBuffer
 
 
 object ReadmeTest {
+    init {
+        System.setProperty("jna.debug_load", "true")
+        System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "TRACE")
+    }
+
     @RepeatedTest(100)
     fun `the low-level wrapper works fine`() {
         val initResult = WirehairLib.INSTANCE.wirehair_init_(2)

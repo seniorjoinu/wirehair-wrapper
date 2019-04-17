@@ -2,8 +2,10 @@ package net.joinu.wirehair
 
 import com.sun.jna.Pointer
 import com.sun.jna.ptr.IntByReference
+import mu.KotlinLogging
 import sun.nio.ch.DirectBuffer
 import java.io.Closeable
+import java.util.*
 
 
 object Wirehair {
@@ -18,6 +20,8 @@ object Wirehair {
         val result = WirehairLib.INSTANCE.wirehair_init_(expectedVersion)
 
         isWirehairResultSuccess(result)
+
+        println("Wirehair loaded and initialized successfully")
     }
 
     abstract class Codec : Closeable {
@@ -52,9 +56,13 @@ object Wirehair {
     class Encoder(val message: DirectBuffer, messageBytes: Int, blockBytes: Int, reuseOpt: Encoder? = null) : Codec() {
         val pointer: Pointer
 
+        private val logger = KotlinLogging.logger("Wirehair::Encoder-${Random().nextInt()}")
+
         init {
             pointer = WirehairLib.INSTANCE.wirehair_encoder_create(reuseOpt?.pointer, message, messageBytes, blockBytes)
                 ?: error("Unable to create encoder. Params: [reuseOpt: $reuseOpt, message: $message, messageBytes: $messageBytes, blockBytes: $blockBytes]")
+
+            logger.trace { "Encoder created" }
         }
 
         /**
@@ -79,6 +87,8 @@ object Wirehair {
             if (!isWirehairResultSuccess(result))
                 error("Unable to encode. Params: [encoder: $this, blockId: $blockId, blockDataOut: $blockDataOut, outBytes: $outBytes]")
 
+            logger.trace { "Encoded blockId $blockId" }
+
             return dataBytesOut.value
         }
 
@@ -91,6 +101,8 @@ object Wirehair {
             super.close()
 
             WirehairLib.INSTANCE.wirehair_free(pointer)
+
+            logger.trace { "Encoder closed" }
         }
     }
 
@@ -108,9 +120,13 @@ object Wirehair {
     class Decoder(messageBytes: Int, blockBytes: Int, reuseOpt: Decoder? = null) : Codec() {
         val pointer: Pointer
 
+        private val logger = KotlinLogging.logger("Wirehair::Decoder-${Random().nextInt()}")
+
         init {
             pointer = WirehairLib.INSTANCE.wirehair_decoder_create(reuseOpt?.pointer, messageBytes, blockBytes)
                 ?: error("Unable to create decoder. Params: [reuseOpt: $reuseOpt, messageBytes: $messageBytes, blockBytes: $blockBytes]")
+
+            logger.trace { "Decoder created" }
         }
 
         /**
@@ -130,6 +146,8 @@ object Wirehair {
 
             val result = WirehairLib.INSTANCE.wirehair_decode(pointer, blockId, blockData, dataBytes)
 
+            logger.trace { "Decoded blockId $blockId" }
+
             return isWirehairResultSuccess(result)
         }
 
@@ -147,6 +165,8 @@ object Wirehair {
 
             val result = WirehairLib.INSTANCE.wirehair_recover(pointer, messageOut, messageBytes)
 
+            logger.trace { "Recovered message" }
+
             if (!isWirehairResultSuccess(result))
                 error("Unable to recover. Params: [decoder: $this, messageOut: $messageOut, messageBytes: $messageBytes]")
         }
@@ -160,6 +180,8 @@ object Wirehair {
             super.close()
 
             WirehairLib.INSTANCE.wirehair_free(pointer)
+
+            logger.trace { "Decoder closed" }
         }
     }
 
