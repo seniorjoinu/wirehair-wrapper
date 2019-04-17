@@ -20,6 +20,23 @@ object Wirehair {
         isWirehairResultSuccess(result)
     }
 
+    abstract class Codec : Closeable {
+        private var closed = false
+
+        /**
+         * Is this codec closed
+         */
+        fun isClosed() = closed
+
+        override fun close() {
+            closed = true
+        }
+
+        protected fun throwIfClosed() {
+            if (isClosed()) error("Encoder is already closed")
+        }
+    }
+
     /**
      * Wirehair encoder
      * This structure is used to encode some message into infinite sequence of repair blocks
@@ -32,7 +49,7 @@ object Wirehair {
      *
      * @throws [IllegalStateException]
      */
-    class Encoder(message: DirectBuffer, messageBytes: Int, blockBytes: Int, reuseOpt: Encoder? = null) : Closeable {
+    class Encoder(val message: DirectBuffer, messageBytes: Int, blockBytes: Int, reuseOpt: Encoder? = null) : Codec() {
         val pointer: Pointer
 
         init {
@@ -54,6 +71,8 @@ object Wirehair {
          * @throws [IllegalStateException]
          */
         fun encode(blockId: Int, blockDataOut: ByteArray, outBytes: Int): Int {
+            throwIfClosed()
+
             val dataBytesOut = IntByReference(0)
             val result = WirehairLib.INSTANCE.wirehair_encode(pointer, blockId, blockDataOut, outBytes, dataBytesOut)
 
@@ -68,6 +87,9 @@ object Wirehair {
          * Use it when you don't need it anymore
          */
         override fun close() {
+            throwIfClosed()
+            super.close()
+
             WirehairLib.INSTANCE.wirehair_free(pointer)
         }
     }
@@ -83,7 +105,7 @@ object Wirehair {
      *
      * @throws [IllegalStateException]
      */
-    class Decoder(messageBytes: Int, blockBytes: Int, reuseOpt: Decoder? = null) : Closeable {
+    class Decoder(messageBytes: Int, blockBytes: Int, reuseOpt: Decoder? = null) : Codec() {
         val pointer: Pointer
 
         init {
@@ -104,6 +126,8 @@ object Wirehair {
          * @throws [WirehairException]
          */
         fun decode(blockId: Int, blockData: ByteArray, dataBytes: Int): Boolean {
+            throwIfClosed()
+
             val result = WirehairLib.INSTANCE.wirehair_decode(pointer, blockId, blockData, dataBytes)
 
             return isWirehairResultSuccess(result)
@@ -119,6 +143,8 @@ object Wirehair {
          * @throws [IllegalStateException]
          */
         fun recover(messageOut: ByteArray, messageBytes: Int) {
+            throwIfClosed()
+
             val result = WirehairLib.INSTANCE.wirehair_recover(pointer, messageOut, messageBytes)
 
             if (!isWirehairResultSuccess(result))
@@ -130,6 +156,9 @@ object Wirehair {
          * Use it when you don't need in anymore
          */
         override fun close() {
+            throwIfClosed()
+            super.close()
+
             WirehairLib.INSTANCE.wirehair_free(pointer)
         }
     }
