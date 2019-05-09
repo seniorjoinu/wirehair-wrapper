@@ -7,6 +7,11 @@ import java.nio.ByteBuffer
 
 
 object ReadmeTest {
+    init {
+        System.setProperty("jna.debug_load", "true")
+        System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "TRACE")
+    }
+
     @RepeatedTest(100)
     fun `the low-level wrapper works fine`() {
         val initResult = WirehairLib.INSTANCE.wirehair_init_(2)
@@ -33,13 +38,13 @@ object ReadmeTest {
         while (true) {
             blockId++
 
-            val block = ByteArray(kPacketSize)
+            val block = ByteBuffer.allocateDirect(kPacketSize)
             val writeLen = IntByReference(0)
 
             val encodeResult = WirehairLib.INSTANCE.wirehair_encode(
                 encoder,
                 blockId,
-                block,
+                block as DirectBuffer,
                 kPacketSize,
                 writeLen
             )
@@ -56,8 +61,8 @@ object ReadmeTest {
             assert(decodeResult == 1) { "Decode failed" }
         }
 
-        val decoded = ByteArray(kMessageBytes)
-        val recoverResult = WirehairLib.INSTANCE.wirehair_recover(decoder, decoded, kMessageBytes)
+        val decoded = ByteBuffer.allocateDirect(kMessageBytes)
+        val recoverResult = WirehairLib.INSTANCE.wirehair_recover(decoder, decoded as DirectBuffer, kMessageBytes)
 
         assert(recoverResult == 0) { "Recover failed" }
 

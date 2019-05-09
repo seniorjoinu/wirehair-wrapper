@@ -2,8 +2,10 @@ package net.joinu.wirehair
 
 import com.sun.jna.Pointer
 import com.sun.jna.ptr.IntByReference
+import mu.KotlinLogging
 import sun.nio.ch.DirectBuffer
 import java.io.Closeable
+import java.util.*
 
 
 object Wirehair {
@@ -18,6 +20,25 @@ object Wirehair {
         val result = WirehairLib.INSTANCE.wirehair_init_(expectedVersion)
 
         isWirehairResultSuccess(result)
+
+        println("Wirehair loaded and initialized successfully")
+    }
+
+    abstract class Codec : Closeable {
+        private var closed = false
+
+        /**
+         * Is this codec closed
+         */
+        fun isClosed() = closed
+
+        override fun close() {
+            closed = true
+        }
+
+        protected fun throwIfClosed() {
+            if (isClosed()) error("Encoder is already closed")
+        }
     }
 
     /**
@@ -32,12 +53,16 @@ object Wirehair {
      *
      * @throws [IllegalStateException]
      */
-    class Encoder(message: DirectBuffer, messageBytes: Int, blockBytes: Int, reuseOpt: Encoder? = null) : Closeable {
+    class Encoder(val message: DirectBuffer, messageBytes: Int, blockBytes: Int, reuseOpt: Encoder? = null) : Codec() {
         val pointer: Pointer
+
+        private val logger = KotlinLogging.logger("Wirehair::Encoder-${Random().nextInt()}")
 
         init {
             pointer = WirehairLib.INSTANCE.wirehair_encoder_create(reuseOpt?.pointer, message, messageBytes, blockBytes)
                 ?: error("Unable to create encoder. Params: [reuseOpt: $reuseOpt, message: $message, messageBytes: $messageBytes, blockBytes: $blockBytes]")
+
+            logger.trace { "Encoder created" }
         }
 
         /**
@@ -45,7 +70,7 @@ object Wirehair {
          * Use it to generate infinite number of repair blocks
          *
          * @param blockId [Int] - identifier of repair block to generate
-         * @param blockDataOut [ByteArray] - output repair block
+         * @param blockDataOut [DirectBuffer] - output repair block
          * @param outBytes [Int] - bytes in the output repair block
          *
          * @return [Int] - number of bytes written <= blockBytes
@@ -53,12 +78,16 @@ object Wirehair {
          * @throws [WirehairException]
          * @throws [IllegalStateException]
          */
-        fun encode(blockId: Int, blockDataOut: ByteArray, outBytes: Int): Int {
+        fun encode(blockId: Int, blockDataOut: DirectBuffer, outBytes: Int): Int {
+            throwIfClosed()
+
             val dataBytesOut = IntByReference(0)
             val result = WirehairLib.INSTANCE.wirehair_encode(pointer, blockId, blockDataOut, outBytes, dataBytesOut)
 
             if (!isWirehairResultSuccess(result))
                 error("Unable to encode. Params: [encoder: $this, blockId: $blockId, blockDataOut: $blockDataOut, outBytes: $outBytes]")
+
+            logger.trace { "Encoded blockId $blockId" }
 
             return dataBytesOut.value
         }
@@ -68,7 +97,12 @@ object Wirehair {
          * Use it when you don't need it anymore
          */
         override fun close() {
+            throwIfClosed()
+            super.close()
+
             WirehairLib.INSTANCE.wirehair_free(pointer)
+
+            logger.trace { "Encoder closed" }
         }
     }
 
@@ -83,12 +117,16 @@ object Wirehair {
      *
      * @throws [IllegalStateException]
      */
-    class Decoder(messageBytes: Int, blockBytes: Int, reuseOpt: Decoder? = null) : Closeable {
+    class Decoder(messageBytes: Int, blockBytes: Int, reuseOpt: Decoder? = null) : Codec() {
         val pointer: Pointer
+
+        private val logger = KotlinLogging.logger("Wirehair::Decoder-${Random().nextInt()}")
 
         init {
             pointer = WirehairLib.INSTANCE.wirehair_decoder_create(reuseOpt?.pointer, messageBytes, blockBytes)
                 ?: error("Unable to create decoder. Params: [reuseOpt: $reuseOpt, messageBytes: $messageBytes, blockBytes: $blockBytes]")
+
+            logger.trace { "Decoder created" }
         }
 
         /**
@@ -96,15 +134,19 @@ object Wirehair {
          * Use it to accumulate as much repair blocks as needed
          *
          * @param blockId [Int] - identifier of repair block to accumulate
-         * @param blockData [ByteArray] - repair block data
+         * @param blockData [DirectBuffer] - repair block data
          * @param dataBytes [Int] - bytes in the repair block data
          *
          * @return [Boolean] - you need more repair blocks for message recovery if this returns false, otherwise you did great!
          *
          * @throws [WirehairException]
          */
-        fun decode(blockId: Int, blockData: ByteArray, dataBytes: Int): Boolean {
+        fun decode(blockId: Int, blockData: DirectBuffer, dataBytes: Int): Boolean {
+            throwIfClosed()
+
             val result = WirehairLib.INSTANCE.wirehair_decode(pointer, blockId, blockData, dataBytes)
+
+            logger.trace { "Decoded blockId $blockId" }
 
             return isWirehairResultSuccess(result)
         }
@@ -112,14 +154,18 @@ object Wirehair {
         /**
          * Recovers message from accumulated repair blocks
          *
-         * @param messageOut [ByteArray] - reconstructed from repair blocks message
+         * @param messageOut [DirectBuffer] - reconstructed from repair blocks message
          * @param messageBytes [Int] - bytes in reconstructed message
          *
          * @throws [WirehairException]
          * @throws [IllegalStateException]
          */
-        fun recover(messageOut: ByteArray, messageBytes: Int) {
+        fun recover(messageOut: DirectBuffer, messageBytes: Int) {
+            throwIfClosed()
+
             val result = WirehairLib.INSTANCE.wirehair_recover(pointer, messageOut, messageBytes)
+
+            logger.trace { "Recovered message" }
 
             if (!isWirehairResultSuccess(result))
                 error("Unable to recover. Params: [decoder: $this, messageOut: $messageOut, messageBytes: $messageBytes]")
@@ -130,7 +176,12 @@ object Wirehair {
          * Use it when you don't need in anymore
          */
         override fun close() {
+            throwIfClosed()
+            super.close()
+
             WirehairLib.INSTANCE.wirehair_free(pointer)
+
+            logger.trace { "Decoder closed" }
         }
     }
 
