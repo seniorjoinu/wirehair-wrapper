@@ -1,3 +1,4 @@
+@file:Suppress("JAVA_MODULE_DOES_NOT_EXPORT_PACKAGE")
 package net.joinu.wirehair
 
 import org.junit.jupiter.api.RepeatedTest
