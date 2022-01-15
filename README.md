@@ -5,6 +5,7 @@ Kotlin wrapper for amazing [catid/wirehair](https://github.com/catid/wirehair)
 Works under:
 * `linux-x86-64`
 * `win32-x86-64`
+* `darwin`
 
 ### Example
 ```kotlin

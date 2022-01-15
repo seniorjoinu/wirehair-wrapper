@@ -1,9 +1,11 @@
+@file:Suppress("JAVA_MODULE_DOES_NOT_EXPORT_PACKAGE")
 package net.joinu.wirehair
 
 import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.ptr.IntByReference
+import com.sun.tools.javac.util.Log
 import sun.nio.ch.DirectBuffer
 
 
@@ -14,6 +16,7 @@ interface WirehairLib : Library {
 
         init {
             val libFile = Native.extractFromResourcePath(LIBRARY_NAME)
+            print(libFile.absolutePath)
             INSTANCE = Native.load(libFile.absolutePath, WirehairLib::class.java)
         }
     }
